@@ -3,33 +3,43 @@ import { request } from '@/utils/request';
 import { notFoundError, requestError } from '@/errors';
 import { addressRepository, CreateAddressParams, enrollmentRepository, CreateEnrollmentParams } from '@/repositories';
 import { exclude } from '@/utils/prisma-utils';
+import { AxiosResponse } from 'axios';
+import { AddressCep } from '@/protocols';
+import { inexistentError } from '@/errors/bad-request';
 
-// TODO - Receber o CEP por parâmetro nesta função.
-  async function getAddressFromCEP(cep :string) {
 
-  try{
-    // FIXME: está com CEP fixo!
-  const result = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
+  async function validateCEP(cep: string) {
+    const result: AxiosResponse = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
-  if (result.data.erro){
-    throw requestError(400, "Bad Request")
+    if (result.status === 200) {
+      if (result.data.erro === true) {
+        throw inexistentError(`cep ${cep} inexistent`);
+      } else {
+        return result.data;
+      }
+    } else if (result.status === 400) {
+      throw inexistentError(`cep ${cep} inexistent`);
+    }
+    return result.data;
   }
 
-  const info = {
-    logradouro: result.data.logradouro,
-    complemento: result.data.complemento,
-    bairro: result.data.bairro,
-    cidade: result.data.localidade,
-    uf: result.data.uf,
-  };
+  // TODO - Receber o CEP por parâmetro nesta função.
+  async function getAddressFromCEP(cep: string): Promise<AddressCep> {
+  // FIXME: está com CEP fixo!
+  const result: AxiosResponse = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
+
+  const { logradouro, complemento, bairro, localidade, uf } = result.data;
+
   // TODO: Tratar regras de negócio e lanças eventuais erros
-
-  // FIXME: não estamos interessados em todos os campos
-  return info;
-
-  } catch (err){
-    throw requestError(400, "Bad Request")
+  //pode não conter complemento
+  if (!logradouro || !bairro || !localidade || !uf) {
+    throw inexistentError(`cep ${cep} inexistent`);
   }
+
+  if (result.data.erro) throw inexistentError('cep');
+  // FIXME: não estamos interessados em todos os campos
+  const adress: AddressCep = { logradouro, complemento, bairro, localidade, uf };
+  return adress;
 }
 
 async function getOneWithAddressByUserId(userId: number): Promise<GetOneWithAddressByUserIdResult> {
@@ -58,11 +68,12 @@ type GetAddressResult = Omit<Address, 'createdAt' | 'updatedAt' | 'enrollmentId'
 
 async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
   const enrollment = exclude(params, 'address');
+  
   enrollment.birthday = new Date(enrollment.birthday);
   const address = getAddressForUpsert(params.address);
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
-  getAddressFromCEP(address.cep)
+  await validateCEP(address.cep)
 
   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
 

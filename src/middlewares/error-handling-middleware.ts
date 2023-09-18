@@ -55,6 +55,11 @@ export function handleApplicationErrors(
       message: err.message,
     });
   }
+  if (err.name === 'BadRequest') {
+    return res.status(httpStatus.BAD_REQUEST).send({
+      message: err.message,
+    });
+  }
 
   /* eslint-disable-next-line no-console */
   console.error(err);
