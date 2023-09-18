@@ -1,51 +1,38 @@
 import { Address, Enrollment } from '@prisma/client';
 import { request } from '@/utils/request';
-import { notFoundError, requestError } from '@/errors';
+import { requestError } from '@/errors';
 import { addressRepository, CreateAddressParams, enrollmentRepository, CreateEnrollmentParams } from '@/repositories';
 import { exclude } from '@/utils/prisma-utils';
-import { AxiosResponse } from 'axios';
 import { AddressCep } from '@/protocols';
-import { inexistentError } from '@/errors/bad-request';
+import httpStatus from 'http-status';
+import { AxiosResponse } from 'axios';
 
+  async function getAddressFromCEP(cep :string) :Promise<AddressCep> {
 
-  async function validateCEP(cep: string) {
-    const result: AxiosResponse = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
-
-    if (result.status === 200) {
-      if (result.data.erro === true) {
-        throw inexistentError(`cep ${cep} inexistent`);
-      } else {
-        return result.data;
-      }
-    } else if (result.status === 400) {
-      throw inexistentError(`cep ${cep} inexistent`);
-    }
-    return result.data;
-  }
-
-  // TODO - Receber o CEP por parâmetro nesta função.
-  async function getAddressFromCEP(cep: string): Promise<AddressCep> {
   // FIXME: está com CEP fixo!
-  const result: AxiosResponse = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
+  const result :AxiosResponse = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
-  const { logradouro, complemento, bairro, localidade, uf } = result.data;
-
-  // TODO: Tratar regras de negócio e lanças eventuais erros
-  //pode não conter complemento
-  if (!logradouro || !bairro || !localidade || !uf) {
-    throw inexistentError(`cep ${cep} inexistent`);
+  if (result.data.erro){
+    throw requestError(httpStatus.BAD_REQUEST, "Bad Request")
   }
 
-  if (result.data.erro) throw inexistentError('cep');
+  const info :AddressCep = {
+    logradouro: result.data.logradouro,
+    complemento: result.data.complemento,
+    bairro: result.data.bairro,
+    cidade: result.data.localidade,
+    uf: result.data.uf,
+  };
+  // TODO: Tratar regras de negócio e lanças eventuais erros
+
   // FIXME: não estamos interessados em todos os campos
-  const adress: AddressCep = { logradouro, complemento, bairro, localidade, uf };
-  return adress;
+  return info;
 }
 
 async function getOneWithAddressByUserId(userId: number): Promise<GetOneWithAddressByUserIdResult> {
   const enrollmentWithAddress = await enrollmentRepository.findWithAddressByUserId(userId);
 
-  if (!enrollmentWithAddress) throw notFoundError();
+  if (!enrollmentWithAddress) throw requestError(httpStatus.BAD_REQUEST, 'Bad Request');
 
   const [firstAddress] = enrollmentWithAddress.Address;
   const address = getFirstAddress(firstAddress);
@@ -73,7 +60,7 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
   const address = getAddressForUpsert(params.address);
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
-  await validateCEP(address.cep)
+  await getAddressFromCEP(params.address.cep)
 
   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
 

@@ -11,20 +11,13 @@ export type RequestError = {
   message: string;
 };
 
-export type cep = {
-  cep: string;
+export type AddressCep = {
   logradouro: string;
   complemento: string;
   bairro: string;
-  localidade: string;
+  cidade: string;
   uf: string;
-  ibge: string;
-  gia: string;
-  ddd: string;
-  siafi: string;
 };
-
-export type AddressCep = Omit<cep, 'cep' | 'ibge' | 'gia' | 'ddd' | 'siafi'>;
 
 export type CepError = {
   erro: boolean;
