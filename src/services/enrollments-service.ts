@@ -1,22 +1,21 @@
 import { Address, Enrollment } from '@prisma/client';
+import httpStatus from 'http-status';
+import { AxiosResponse } from 'axios';
 import { request } from '@/utils/request';
 import { requestError } from '@/errors';
 import { addressRepository, CreateAddressParams, enrollmentRepository, CreateEnrollmentParams } from '@/repositories';
 import { exclude } from '@/utils/prisma-utils';
 import { AddressCep } from '@/protocols';
-import httpStatus from 'http-status';
-import { AxiosResponse } from 'axios';
 
-  async function getAddressFromCEP(cep :string) :Promise<AddressCep> {
-
+async function getAddressFromCEP(cep: string): Promise<AddressCep> {
   // FIXME: está com CEP fixo!
-  const result :AxiosResponse = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
+  const result: AxiosResponse = await request.get(`${process.env.VIA_CEP_API}/${cep}/json/`);
 
-  if (result.data.erro){
-    throw requestError(httpStatus.BAD_REQUEST, "Bad Request")
+  if (result.data.erro) {
+    throw requestError(httpStatus.BAD_REQUEST, 'Bad Request');
   }
 
-  const info :AddressCep = {
+  const info: AddressCep = {
     logradouro: result.data.logradouro,
     complemento: result.data.complemento,
     bairro: result.data.bairro,
@@ -55,12 +54,12 @@ type GetAddressResult = Omit<Address, 'createdAt' | 'updatedAt' | 'enrollmentId'
 
 async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollmentWithAddress) {
   const enrollment = exclude(params, 'address');
-  
+
   enrollment.birthday = new Date(enrollment.birthday);
   const address = getAddressForUpsert(params.address);
 
   // TODO - Verificar se o CEP é válido antes de associar ao enrollment.
-  await getAddressFromCEP(params.address.cep)
+  await getAddressFromCEP(params.address.cep);
 
   const newEnrollment = await enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
 
