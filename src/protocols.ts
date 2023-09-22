@@ -11,7 +11,11 @@ export type RequestError = {
   message: string;
 };
 
-export type AddressCep = {
+export type ViaCEPAddressError = {
+  error: boolean;
+};
+
+export type AddressEnrollment = {
   logradouro: string;
   complemento: string;
   bairro: string;
@@ -19,6 +23,6 @@ export type AddressCep = {
   uf: string;
 };
 
-export type CepError = {
-  erro: boolean;
+export type CEP = {
+  cep: string;
 };
