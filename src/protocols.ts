@@ -1,5 +1,3 @@
-import { Ticket, TicketType } from "@prisma/client";
-
 export type ApplicationError = {
   name: string;
   message: string;
@@ -29,6 +27,6 @@ export type CEP = {
   cep: string;
 };
 
-export type TicketResponse = Ticket & {
-  TicketType: TicketType;
+export type TicketTypeId = {
+  ticketTypeId: number;
 }
