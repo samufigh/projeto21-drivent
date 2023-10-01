@@ -126,7 +126,6 @@ beforeEach(async () => {
         expect(response.status).toBe(httpStatus.OK);
         expect(response.body).toEqual(expect.arrayContaining(hotelWithRooms));
       });
-
-
     });
+    
   });

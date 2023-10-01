@@ -8,12 +8,17 @@ async function findHotels(userId :number){
     const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
     const hotelsInfo = await hotelsRepository.findAllHotels()
 
-    if(!ticket || hotelsInfo.count === 0) throw notFoundError()
+    if(!ticket) throw notFoundError()
 
     if(ticket.status === "RESERVED" 
         || ticket.TicketType.isRemote 
         || !ticket.TicketType.includesHotel) 
         throw paymentError()
+    if (hotelsInfo.count === 0){
+        console.log("oi")
+    }
+    if (hotelsInfo.count === 0) throw notFoundError()
+
     return hotelsInfo.hotels
 }
 
