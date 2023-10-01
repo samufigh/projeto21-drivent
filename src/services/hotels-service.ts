@@ -13,12 +13,26 @@ async function findHotels(userId :number){
         || ticket.TicketType.isRemote 
         || !ticket.TicketType.includesHotel) 
         throw paymentError()
-
-    console.log(hotelsInfo.count)
-    console.log(hotelsInfo.hotels)
     return hotelsInfo.hotels
 }
 
+async function findHotel(userId: number, id: string){
+    const hotelId = Number(id)
+    const enrollment = await enrollmentRepository.findByUserId(userId);
+    const ticket = await ticketsRepository.findTicketByEnrollmentId(enrollment.id);
+    const hotel = await hotelsRepository.findHotelById(hotelId)
+
+    if(!enrollment || !ticket || !hotel) throw notFoundError()
+
+    if(ticket.status === "RESERVED" 
+        || ticket.TicketType.isRemote 
+        || !ticket.TicketType.includesHotel) 
+        throw paymentError()
+
+    return hotel
+}
+
 export const hotelsService = {
-    findHotels
+    findHotels,
+    findHotel
 }

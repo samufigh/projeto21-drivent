@@ -7,6 +7,15 @@ async function findAllHotels() :Promise<{hotels: Hotel[], count: number}>{
     return {hotels: result, count}
 }
 
+async function findHotelById(id: number) {
+    const result = await prisma.hotel.findUnique({
+      where: { id },
+      include: { Rooms: true },
+    });
+    return result;
+  }
+
 export const hotelsRepository = {
-    findAllHotels
+    findAllHotels,
+    findHotelById
 }
