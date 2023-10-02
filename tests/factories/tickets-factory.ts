@@ -13,7 +13,7 @@ export async function createTicketType() {
   });
 }
 
-export async function createTicketTypeAux(remote :boolean, hotel :boolean) {
+export async function createTicketTypeAux(remote: boolean, hotel: boolean) {
   return prisma.ticketType.create({
     data: {
       name: faker.name.findName(),
