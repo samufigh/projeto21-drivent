@@ -11,6 +11,31 @@ async function getBookingByUserId(userId: number) {
     return { id: booking.id, Room: room };
   }
 
+  async function roomExists(roomId: number) {
+    return prisma.room.findFirst({
+      where: {
+        id: roomId,
+      },
+      include: {
+        Booking: true,
+      },
+    });
+  }
+
+  async function create(userId: number, roomId: number) {
+    return prisma.booking.create({
+      data: {
+        userId,
+        roomId,
+      },
+    });
+  }
+
 export const bookingRepository = {
-    getBookingByUserId
+    getBookingByUserId,
+    roomExists,
+    create
 }
+
+export type BookingBody = { roomId: number };
+export type BookingParam = { bookingId: number };

@@ -2,7 +2,7 @@ import faker from '@faker-js/faker';
 import httpStatus from 'http-status';
 import * as jwt from 'jsonwebtoken';
 import supertest from 'supertest';
-import { TicketStatus } from '@prisma/client';
+import { Room, TicketStatus } from '@prisma/client';
 import {
   createUser,
   createTicketType,
@@ -11,6 +11,7 @@ import {
   createEnrollmentWithAddress,
   createTicket,
   createBooking,
+  generateCreditCardData,
 } from '../factories';
 import { cleanDb, generateValidToken } from '../helpers';
 import app, { init } from '@/app';
@@ -67,8 +68,8 @@ describe('GET /booking', () => {
       const res = await server.get('/booking').set('Authorization', `Bearer ${token}`);
       expect(res.status).toBe(httpStatus.OK);
       expect(res.body).toEqual({
-        id: booking.id,
-        Room: {
+        id: booking.id, 
+        Room: { 
           id: room.id,
           name: room.name,
           capacity: room.capacity,
@@ -80,3 +81,4 @@ describe('GET /booking', () => {
     });
   });
 });
+
