@@ -47,7 +47,7 @@ async function ticketProcessPayment(ticketId: number) {
   return result;
 }
 
-async function create(ticketId: number, enrollmentId: number){
+async function create(ticketId: number, enrollmentId: number) {
   const ticket = await prisma.ticket.create({
     data: {
       enrollmentId: enrollmentId,
@@ -88,8 +88,6 @@ async function getTicket(userId: number) {
   return ticket;
 }
 
-
-
 export const ticketsRepository = {
   findTicketTypes,
   findTicketByEnrollmentId,
@@ -97,5 +95,5 @@ export const ticketsRepository = {
   findTicketById,
   ticketProcessPayment,
   getTicket,
-  create
+  create,
 };

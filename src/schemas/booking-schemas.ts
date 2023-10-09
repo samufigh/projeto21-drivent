@@ -1,5 +1,5 @@
-import { BookingBody, BookingParam } from '@/repositories';
 import Joi from 'joi';
+import { BookingBody, BookingParam } from '@/repositories';
 
 export const bookingBodySchema = Joi.object<BookingBody>({
   roomId: Joi.number().required(),
